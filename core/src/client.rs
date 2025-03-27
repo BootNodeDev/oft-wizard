@@ -1,17 +1,12 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use ethers::signers::{LocalWallet, Wallet};
-use std::env;
-use std::fs;
-
-pub async fn wallet_from_env() -> Result<LocalWallet> {
-    let key = env::var("PRIVATE_KEY").context("PRIVATE_KEY not set")?;
-    Ok(key.parse::<LocalWallet>()?)
-}
+use std::path::Path;
 
 /// Load a wallet from a keystore file.
 /// `cast wallet new .`
 pub async fn wallet_from_keystore(path: &str, password: &str) -> Result<LocalWallet> {
-    let json = fs::read_to_string(path)?;
-    let wallet = Wallet::decrypt_keystore(&json, password)?;
+    let path = Path::new(path);
+    let wallet = Wallet::decrypt_keystore(&path, password)?;
+    println!("Wallet loaded successfully.");
     Ok(wallet)
 }

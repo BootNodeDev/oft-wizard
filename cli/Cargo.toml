@@ -10,3 +10,4 @@ core = { path = "../core" }
 ethers = "2"
 anyhow = "1"
 foundry-config = "0.2"
+dotenvy = "0.15"

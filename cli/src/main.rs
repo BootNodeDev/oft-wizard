@@ -1,7 +1,8 @@
 use clap::{Parser, Subcommand};
 use core::{client, deployer};
-use ethers::providers::{Http, Provider};
-// use ethers::types::Address;
+use ethers::providers::{Http, Middleware, Provider};
+use ethers::signers::Signer;
+use ethers::types::Address;
 use foundry_config::Config;
 use std::process::Command;
 
@@ -9,10 +10,12 @@ use std::process::Command;
 #[command(name = "deploy-cli")]
 #[command(about = "Deploy contracts and manage deployer", long_about = None)]
 struct Cli {
+    #[arg(long)]
+    chain: String,
+
     #[command(subcommand)]
     command: Commands,
 }
-
 #[derive(Subcommand)]
 enum Commands {
     Wallet {
@@ -20,6 +23,10 @@ enum Commands {
         action: WalletAction,
     },
     Deploy {
+        #[arg(long)]
+        path: String,
+        #[arg(long)]
+        password: String,
         contract: String,
     },
 }
@@ -27,24 +34,34 @@ enum Commands {
 #[derive(Subcommand)]
 enum WalletAction {
     New,
-    Balance,
+    Balance {
+        #[arg(long)]
+        path: String,
+        #[arg(long)]
+        password: String,
+    },
+}
+
+fn get_provider(chain_alias: &str) -> anyhow::Result<Provider<Http>> {
+    let config = Config::load();
+
+    let rpc_url: String = config
+        .get_rpc_url_with_alias(chain_alias)
+        .ok_or_else(|| anyhow::anyhow!("Error trying to get RPC URL from config"))?
+        .map_err(|e| anyhow::anyhow!("Error getting RPC URL: {}", e))?
+        .into_owned();
+
+    Provider::<Http>::try_from(rpc_url)
+        .map_err(|e| anyhow::anyhow!("Error instantiating provider: {}", e))
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dotenvy::dotenv().ok();
+
     let cli = Cli::parse();
-
-    let config = Config::load_with_root("./");
-    println!("{:?}", config);
-    let rpc_url: String = match config.get_rpc_url_with_alias("optimism_sepolia") {
-        Some(Ok(rpc)) => rpc.into_owned(),
-        _ => panic!("rpc"),
-    };
-
-    let provider = match Provider::<Http>::try_from(rpc_url) {
-        Ok(provider) => provider,
-        _ => panic!("provider"),
-    };
+    let chain = cli.chain;
+    let provider = get_provider(chain.as_str()).expect("Provider setup failed");
 
     match cli.command {
         Commands::Wallet { action } => match action {
@@ -52,23 +69,35 @@ async fn main() -> anyhow::Result<()> {
                 let output = Command::new("cast")
                     .arg("wallet")
                     .arg("new")
-                    .arg("../wallets")
+                    .arg("wallets")
                     .output()?;
-                println!("{}", String::from_utf8_lossy(&output.stdout));
+
+                println!(
+                    "Error from cast wallet new {:?}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+                println!(
+                    "Output from cast wallet new {:?}",
+                    String::from_utf8_lossy(&output.stdout)
+                );
             }
-            WalletAction::Balance => {
-                let wallet = client::wallet_from_env().await?;
-                // let addr: Address = wallet.address();
-                // let balance = provider.get_balance(addr, None).await?;
-                // println!(
-                //     "Deployer: {}\nBalance: {} ETH",
-                //     addr,
-                //     ethers::utils::format_ether(balance)
-                // );
+            WalletAction::Balance { path, password } => {
+                let wallet = client::wallet_from_keystore(path.as_str(), password.as_str()).await?;
+                let addr: Address = wallet.address();
+                let balance = provider.get_balance(addr, None).await?;
+                println!(
+                    "Deployer: {:?}\nBalance: {} ETH",
+                    addr,
+                    ethers::utils::format_ether(balance)
+                );
             }
         },
-        Commands::Deploy { contract } => {
-            let wallet = client::wallet_from_env().await?;
+        Commands::Deploy {
+            path,
+            password,
+            contract,
+        } => {
+            let wallet = client::wallet_from_keystore(path.as_str(), password.as_str()).await?;
             let addr = deployer::deploy_contract(&contract, provider, wallet).await?;
             println!("Deployed `{}` at {}\n", contract, addr);
         }
