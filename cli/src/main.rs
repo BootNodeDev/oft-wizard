@@ -4,6 +4,7 @@ use ethers::providers::{Http, Middleware, Provider};
 use ethers::signers::Signer;
 use ethers::types::Address;
 use foundry_config::Config;
+use rpassword::prompt_password;
 use std::process::Command;
 
 #[derive(Parser)]
@@ -25,8 +26,8 @@ enum Commands {
     Deploy {
         #[arg(long)]
         path: String,
-        #[arg(long)]
-        password: String,
+        #[arg(long, hide = true)]
+        password: Option<String>,
         contract: String,
     },
 }
@@ -37,9 +38,20 @@ enum WalletAction {
     Balance {
         #[arg(long)]
         path: String,
-        #[arg(long)]
-        password: String,
+        #[arg(long, hide = true)]
+        password: Option<String>,
     },
+}
+
+async fn get_wallet_from_keystore(
+    path: &str,
+    password: Option<String>,
+) -> anyhow::Result<ethers::signers::LocalWallet> {
+    let password = match password {
+        Some(pass) => pass,
+        None => prompt_password("Enter password: ")?,
+    };
+    client::wallet_from_keystore(path, &password).await
 }
 
 fn get_provider(chain_alias: &str) -> anyhow::Result<Provider<Http>> {
@@ -82,7 +94,7 @@ async fn main() -> anyhow::Result<()> {
                 );
             }
             WalletAction::Balance { path, password } => {
-                let wallet = client::wallet_from_keystore(path.as_str(), password.as_str()).await?;
+                let wallet = get_wallet_from_keystore(path.as_str(), password).await?;
                 let addr: Address = wallet.address();
                 let balance = provider.get_balance(addr, None).await?;
                 println!(
@@ -97,7 +109,7 @@ async fn main() -> anyhow::Result<()> {
             password,
             contract,
         } => {
-            let wallet = client::wallet_from_keystore(path.as_str(), password.as_str()).await?;
+            let wallet = get_wallet_from_keystore(path.as_str(), password).await?;
             let addr = deployer::deploy_contract(&contract, provider, wallet).await?;
             println!("Deployed `{}` at {}\n", contract, addr);
         }
