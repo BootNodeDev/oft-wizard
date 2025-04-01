@@ -11,12 +11,9 @@ dependencies:
   '@layerzerolabs/oapp-evm':
     specifier: ^0.3.2
     version: 0.3.2(@layerzerolabs/lz-evm-messagelib-v2@3.0.83)(@layerzerolabs/lz-evm-protocol-v2@3.0.83)(@layerzerolabs/lz-evm-v1-0.7@3.0.83)(@openzeppelin/contracts-upgradeable@5.2.0)(@openzeppelin/contracts@5.2.0)
-  install:
-    specifier: ^0.13.0
-    version: 0.13.0
-  pnpm:
-    specifier: ^10.7.0
-    version: 10.7.0
+  '@openzeppelin/contracts':
+    specifier: ^5.2.0
+    version: 5.2.0
 
 packages:
 
@@ -964,11 +961,6 @@ packages:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
     dev: false
 
-  /install@0.13.0:
-    resolution: {integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==}
-    engines: {node: '>= 0.10'}
-    dev: false
-
   /is-binary-path@2.1.0:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
     engines: {node: '>=8'}
@@ -1069,12 +1061,6 @@ packages:
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
-    dev: false
-
-  /pnpm@10.7.0:
-    resolution: {integrity: sha512-a4Za1LYqHZhCth1nSjk5A7hx2SRJVPZSuIQsK1U8chdrJ49kxGPlLUD/+KujhcI1yMns9cx95P14uLttSWM6tg==}
-    engines: {node: '>=18.12'}
-    hasBin: true
     dev: false
 
   /qs@6.14.0:

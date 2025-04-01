@@ -1,25 +1,24 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::Output,
+};
 
-use foundry_compilers::{solc::Solc, Project, ProjectPathsConfig};
+use foundry_compilers::{Project, ProjectPathsConfig};
 
 pub fn compile_contract() -> Result<(), anyhow::Error> {
-    // configure the project with all its paths, solc, cache etc.
+    let contracts_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .to_owned()
+        .join(PathBuf::from("src/solidity"));
+
     let project = Project::builder()
-        .paths(
-            ProjectPathsConfig::hardhat(
-                &Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .to_owned()
-                    .join(PathBuf::from("src/contracts")),
-            )
-            .unwrap(),
-        )
+        .paths(ProjectPathsConfig::hardhat(&contracts_path).unwrap())
+        .set_no_artifacts(false)
         .build(Default::default())
         .unwrap();
-    // https://github.com/foundry-rs/compilers/blob/main/crates/compilers/tests/project.rs#L2627
 
-    println!("{:?}", project);
+    println!("Project:\n {:?}\n", project);
     let output = project.compile().unwrap();
 
-    println!("{:?}\n", output);
+    println!("Output:\n {:?}\n", output);
     Ok(())
 }
