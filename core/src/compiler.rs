@@ -1,8 +1,6 @@
-use std::{
-    path::{Path, PathBuf},
-    process::Output,
-};
+use std::path::{Path, PathBuf};
 
+use anyhow::Error;
 use foundry_compilers::{Project, ProjectPathsConfig};
 
 pub fn compile_contract() -> Result<(), anyhow::Error> {
@@ -14,10 +12,12 @@ pub fn compile_contract() -> Result<(), anyhow::Error> {
         .paths(ProjectPathsConfig::hardhat(&contracts_path).unwrap())
         .set_no_artifacts(false)
         .build(Default::default())
-        .unwrap();
+        .map_err(|e| Error::new(e).context("Failed to build project"))?;
 
     println!("Project:\n {:?}\n", project);
-    let output = project.compile().unwrap();
+    let output = project
+        .compile()
+        .map_err(|e| Error::new(e).context("Failed to compile contracts"))?;
 
     println!("Output:\n {:?}\n", output);
     Ok(())
