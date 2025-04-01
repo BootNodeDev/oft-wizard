@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use core::compiler::compile_contract;
 use core::{client, deployer};
 use ethers::providers::{Http, Middleware, Provider};
 use ethers::signers::Signer;
@@ -30,6 +31,7 @@ enum Commands {
         password: Option<String>,
         contract: String,
     },
+    Compile,
 }
 
 #[derive(Subcommand)]
@@ -112,6 +114,13 @@ async fn main() -> anyhow::Result<()> {
             let wallet = get_wallet_from_keystore(path.as_str(), password).await?;
             let addr = deployer::deploy_contract(&contract, provider, wallet).await?;
             println!("Deployed `{}` at {}\n", contract, addr);
+        }
+        Commands::Compile => {
+            println!("Compiling contract...");
+            match compile_contract() {
+                Ok(_) => println!("Compilation complete"),
+                Err(e) => println!("Compilation failed: {}", e),
+            };
         }
     }
 
