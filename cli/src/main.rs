@@ -113,7 +113,7 @@ async fn main() -> anyhow::Result<()> {
         } => {
             let wallet = get_wallet_from_keystore(path.as_str(), password).await?;
             let addr = deployer::deploy_contract(&contract, provider, wallet).await?;
-            println!("Deployed `{}` at {}\n", contract, addr);
+            println!("Deployed `{}` at {:?}\n", contract, addr);
         }
         Commands::Compile => {
             println!("Compiling contract...");
