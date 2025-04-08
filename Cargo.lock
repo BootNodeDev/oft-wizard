@@ -838,6 +838,7 @@ dependencies = [
  "anyhow",
  "ethers",
  "foundry-compilers",
+ "foundry-config",
  "serde",
  "serde_json",
  "tokio",
