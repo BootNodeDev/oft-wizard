@@ -4,7 +4,7 @@ pub mod helpers;
 use crate::cli::{Cli, Commands, WalletAction};
 use clap::Parser as _;
 use core::compiler::compile_contract;
-use core::deployer;
+use core::layer_zero::deploy_on_chains;
 use core::provider::get_providers_with_endpoints;
 use ethers::providers::Middleware;
 use ethers::signers::Signer;
@@ -27,6 +27,8 @@ async fn main() -> anyhow::Result<()> {
         Some(rpc_info) => rpc_info.clone(),
         None => return Err(anyhow::anyhow!("Chain '{}' not found", chain)),
     };
+
+    println!("{:?}", rpc_info);
 
     match cli.command {
         Commands::Wallet { action } => match action {
@@ -67,7 +69,7 @@ async fn main() -> anyhow::Result<()> {
         Commands::Deploy {
             path,
             password,
-            contract,
+            chainlist,
         } => {
             let wallet = helpers::get_wallet_from_keystore(
                 path.as_str(),
@@ -75,8 +77,9 @@ async fn main() -> anyhow::Result<()> {
                 password,
             )
             .await?;
-            let addr = deployer::deploy_oapp_contract(rpc_info, wallet).await?;
-            println!("Deployed `{}` at {:?}\n", contract, addr);
+            //let addr = deployer::deploy_oapp_contract(rpc_info, wallet).await?;
+            deploy_on_chains(&chainlist, &wallet).await?;
+            // println!("Deployed `{}` at {:?}\n", contract, addr);
         }
         Commands::Compile => {
             println!("Compiling contract...");

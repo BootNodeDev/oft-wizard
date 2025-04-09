@@ -1,20 +1,22 @@
+use dotenvy;
 use ethers::providers::{Http, Provider};
 use ethers::types::Address;
 use foundry_config::Config;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RpcInfo {
     pub provider: Provider<Http>,
     pub endpoint: Address,
 }
 
 pub fn get_providers_with_endpoints() -> anyhow::Result<HashMap<String, RpcInfo>> {
+    dotenvy::dotenv().ok(); // load .env
     let config = Config::load();
+    println!("Config {:?}", config);
 
     let rpc_endpoints = config.rpc_endpoints.clone();
     let mut rpc_info: HashMap<String, RpcInfo> = HashMap::new();
-
     for (alias, raw_url) in rpc_endpoints.iter() {
         let provider = Provider::<Http>::try_from(raw_url.to_string().clone())
             .map_err(|e| anyhow::anyhow!("Error instantiating provider: {}", e))?;
@@ -32,7 +34,7 @@ pub fn get_providers_with_endpoints() -> anyhow::Result<HashMap<String, RpcInfo>
             endpoint_default_address
         };
 
-        rpc_info.insert(alias.clone(), (RpcInfo { provider, endpoint }).clone());
+        rpc_info.insert(alias.clone(), RpcInfo { provider, endpoint });
     }
 
     // let result = match rpc_info.get(chain_alias) {

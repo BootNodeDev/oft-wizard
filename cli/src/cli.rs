@@ -21,7 +21,8 @@ pub enum Commands {
         path: String,
         #[arg(long, hide = true)]
         password: Option<String>,
-        contract: String,
+        #[arg(long, num_args = 1..)]
+        chainlist: Vec<String>,
     },
     Compile,
 }

@@ -11,3 +11,4 @@ anyhow = "1"
 tokio = { version = "1", features = ["full"] }
 foundry-compilers = "0.10.1"
 foundry-config = "0.2"
+dotenvy = "0.15"
