@@ -1,3 +1,4 @@
+pub mod chain;
 pub mod client;
 pub mod compiler;
 pub mod deployer;

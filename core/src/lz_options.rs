@@ -1,5 +1,7 @@
 use ethers::abi::{Token, encode_packed};
 
+// ChatGPT Translation of required functions.
+// TODO improve and use builder pattern with all features and testing.
 /// Encode a Solidity `uint16` as exactly 2 bytes (big-endian) as `abi.encodePacked(uint16)`.
 fn encode_uint16_be(value: u16) -> Token {
     // 2-byte big-endian representation

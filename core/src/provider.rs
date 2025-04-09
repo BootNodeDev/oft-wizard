@@ -1,46 +1,59 @@
 use dotenvy;
-use ethers::providers::{Http, Provider};
-use ethers::types::Address;
-use foundry_config::Config;
+use ethers::middleware::SignerMiddleware;
+use ethers::providers::{Http, Middleware, Provider};
+use ethers::signers::{LocalWallet, Signer};
+use foundry_config::{Config, RpcEndpoint};
 use std::collections::HashMap;
+use std::str::FromStr;
+use std::sync::Arc;
 
-#[derive(Clone, Debug)]
-pub struct RpcInfo {
-    pub provider: Provider<Http>,
-    pub endpoint: Address,
-}
+use crate::chain::SupportedChain;
 
-pub fn get_providers_with_endpoints() -> anyhow::Result<HashMap<String, RpcInfo>> {
+pub type ProviderHttp = Provider<Http>;
+pub type WalletLocal = LocalWallet;
+pub type ChainMiddleware = SignerMiddleware<ProviderHttp, WalletLocal>;
+pub type ChainClient = Arc<ChainMiddleware>;
+
+pub fn get_rpc_endpoints_from_foundry_config()
+-> anyhow::Result<HashMap<SupportedChain, RpcEndpoint>> {
     dotenvy::dotenv().ok(); // load .env
+
     let config = Config::load();
     println!("Config {:?}", config);
 
-    let rpc_endpoints = config.rpc_endpoints.clone();
-    let mut rpc_info: HashMap<String, RpcInfo> = HashMap::new();
+    let mut rpc_endpoints = HashMap::new();
+    for (alias, endpoint) in config.rpc_endpoints.iter() {
+        match SupportedChain::from_str(alias) {
+            Ok(supported_chain) => {
+                rpc_endpoints.insert(supported_chain, endpoint.clone());
+            }
+            Err(e) => {
+                eprintln!("Chain alias is not supported: {}", e);
+                continue;
+            }
+        }
+    }
+    Ok(rpc_endpoints)
+}
+
+pub async fn build_chain_clients(
+    wallet: &LocalWallet,
+) -> anyhow::Result<HashMap<SupportedChain, ChainClient>> {
+    let rpc_endpoints = get_rpc_endpoints_from_foundry_config().unwrap();
+
+    let mut clients: HashMap<SupportedChain, ChainClient> = HashMap::new();
     for (alias, raw_url) in rpc_endpoints.iter() {
         let provider = Provider::<Http>::try_from(raw_url.to_string().clone())
             .map_err(|e| anyhow::anyhow!("Error instantiating provider: {}", e))?;
 
-        let endpoint_default_address =
-            "0x6EDCE65403992e310A62460808c4b910D972f10f".parse::<Address>()?;
+        let chain_id = provider.get_chainid().await?.as_u64();
 
-        let endpoint = if let Some(addr_str) =
-            std::env::var(format!("ENDPOINT_{}", alias.to_uppercase())).ok()
-        {
-            addr_str
-                .parse::<Address>()
-                .map_err(|_| anyhow::anyhow!("Invalid endpoint address format for {}", alias))?
-        } else {
-            endpoint_default_address
-        };
+        let signer_middleware =
+            SignerMiddleware::new(provider, wallet.clone().with_chain_id(chain_id));
+        let arc_client = Arc::new(signer_middleware);
 
-        rpc_info.insert(alias.clone(), RpcInfo { provider, endpoint });
+        clients.insert(alias.clone(), arc_client);
     }
 
-    // let result = match rpc_info.get(chain_alias) {
-    //     Some(rpc_info) => Ok(rpc_info.clone()),
-    //     None => Err(anyhow::anyhow!("Provider not found for {}", chain_alias)),
-    // };
-
-    Ok(rpc_info)
+    Ok(clients)
 }

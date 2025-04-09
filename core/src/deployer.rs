@@ -1,18 +1,19 @@
-use crate::provider::RpcInfo;
 use anyhow::Result;
 use ethers::prelude::*;
-use std::sync::Arc;
 
-pub async fn deploy_oapp_contract(rpc_info: RpcInfo, wallet: LocalWallet) -> Result<Address> {
-    let endpoint_address = rpc_info.endpoint;
-    let delegator_address = wallet.address();
+use crate::{chain::SupportedChain, provider::ChainClient};
 
-    // FIXME Hardcoded string
-    abigen!(MyOApp, "core/src/solidity/artifacts/MyOApp.sol/MyOApp.json");
+// FIXME Hardcoded string
+abigen!(MyOApp, "core/src/solidity/artifacts/MyOApp.sol/MyOApp.json");
 
-    let client = Arc::new(SignerMiddleware::new(rpc_info.clone().provider, wallet));
+pub async fn deploy_oapp_contract(
+    chain: &SupportedChain,
+    chain_client: &ChainClient,
+) -> Result<Address> {
+    let endpoint_address = chain.endpoint_address();
+    let delegator_address = chain_client.address();
 
-    let deployed = MyOApp::deploy(client, (endpoint_address, delegator_address))
+    let deployed = MyOApp::deploy(chain_client.clone(), (endpoint_address, delegator_address))
         .map_err(|e| {
             println!("Deployment preparation error: {:?}", e);
             anyhow::Error::from(e)

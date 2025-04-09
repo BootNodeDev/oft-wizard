@@ -3,13 +3,15 @@ pub mod helpers;
 
 use crate::cli::{Cli, Commands, WalletAction};
 use clap::Parser as _;
+use core::chain::SupportedChain;
 use core::compiler::compile_contract;
-use core::layer_zero::deploy_on_chains;
-use core::provider::get_providers_with_endpoints;
+use core::layer_zero::{deploy_on_chains, setup_peer_connections};
+use core::provider::build_chain_clients;
 use ethers::providers::Middleware;
 use ethers::signers::Signer;
 use ethers::types::Address;
 use std::process::Command;
+use std::str::FromStr;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -17,18 +19,6 @@ async fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
     let chain = cli.chain;
-
-    let providers = match get_providers_with_endpoints() {
-        Ok(providers) => providers,
-        Err(e) => return Err(e),
-    };
-
-    let rpc_info = match providers.get(chain.as_str()) {
-        Some(rpc_info) => rpc_info.clone(),
-        None => return Err(anyhow::anyhow!("Chain '{}' not found", chain)),
-    };
-
-    println!("{:?}", rpc_info);
 
     match cli.command {
         Commands::Wallet { action } => match action {
@@ -49,15 +39,14 @@ async fn main() -> anyhow::Result<()> {
                 );
             }
             WalletAction::Balance { path, password } => {
-                let wallet = helpers::get_wallet_from_keystore(
-                    path.as_str(),
-                    Some(rpc_info.clone().provider),
-                    password,
-                )
-                .await?;
+                let wallet =
+                    helpers::get_wallet_from_keystore(path.as_str(), None, password).await?;
 
                 let addr: Address = wallet.address();
-                let balance = rpc_info.provider.get_balance(addr, None).await?;
+                let chain_object = SupportedChain::from_str(&chain).unwrap();
+                let clients = build_chain_clients(&wallet).await?;
+                let provider = clients.get(&chain_object).unwrap().provider();
+                let balance = provider.get_balance(addr, None).await?;
 
                 println!(
                     "Deployer: {:?}\nBalance: {} ETH",
@@ -71,15 +60,47 @@ async fn main() -> anyhow::Result<()> {
             password,
             chainlist,
         } => {
-            let wallet = helpers::get_wallet_from_keystore(
-                path.as_str(),
-                Some(rpc_info.provider.clone()),
-                password,
-            )
-            .await?;
-            //let addr = deployer::deploy_oapp_contract(rpc_info, wallet).await?;
-            deploy_on_chains(&chainlist, &wallet).await?;
-            // println!("Deployed `{}` at {:?}\n", contract, addr);
+            let wallet = helpers::get_wallet_from_keystore(path.as_str(), None, password).await?;
+
+            let supported_chains = chainlist
+                .iter()
+                .map(|chain_str| {
+                    chain_str
+                        .parse::<core::chain::SupportedChain>()
+                        .expect("Invalid chain")
+                })
+                .collect::<Vec<core::chain::SupportedChain>>();
+
+            let deployed = deploy_on_chains(&supported_chains, &wallet).await?;
+            for (chain, addr) in supported_chains.iter().zip(deployed.iter()) {
+                println!("Chain {}: Deployed contract at address: {:?}", chain, addr);
+            }
+
+            // TODO make this optional
+            setup_peer_connections(&wallet, &deployed).await?;
+            // Send cross-chain message from each chain to every other chain
+            println!("Sending cross-chain messages...");
+            for (src_idx, src_chain) in supported_chains.iter().enumerate() {
+                for (dst_idx, dst_chain) in supported_chains.iter().enumerate() {
+                    if src_idx != dst_idx {
+                        let message = format!("Hi {} from {}", dst_chain, src_chain);
+                        match core::layer_zero::send_cross_chain_message(
+                            &wallet, &deployed, src_chain, dst_chain, message,
+                        )
+                        .await
+                        {
+                            Ok(_) => println!(
+                                "Successfully sent message from {} to {}",
+                                src_chain, dst_chain
+                            ),
+                            Err(e) => println!(
+                                "Failed to send message from {} to {}: {}",
+                                src_chain, dst_chain, e
+                            ),
+                        }
+                    }
+                }
+            }
         }
         Commands::Compile => {
             println!("Compiling contract...");
