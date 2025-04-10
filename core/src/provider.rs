@@ -1,5 +1,5 @@
 use dotenvy;
-use ethers::middleware::SignerMiddleware;
+use ethers::middleware::{NonceManagerMiddleware, SignerMiddleware};
 use ethers::providers::{Http, Middleware, Provider};
 use ethers::signers::{LocalWallet, Signer};
 use foundry_config::{Config, RpcEndpoint};
@@ -11,7 +11,7 @@ use crate::chain::SupportedChain;
 
 pub type ProviderHttp = Provider<Http>;
 pub type WalletLocal = LocalWallet;
-pub type ChainMiddleware = SignerMiddleware<ProviderHttp, WalletLocal>;
+pub type ChainMiddleware = NonceManagerMiddleware<SignerMiddleware<ProviderHttp, WalletLocal>>;
 pub type ChainClient = Arc<ChainMiddleware>;
 
 pub fn get_rpc_endpoints_from_foundry_config()
@@ -19,7 +19,6 @@ pub fn get_rpc_endpoints_from_foundry_config()
     dotenvy::dotenv().ok(); // load .env
 
     let config = Config::load();
-    println!("Config {:?}", config);
 
     let mut rpc_endpoints = HashMap::new();
     for (alias, endpoint) in config.rpc_endpoints.iter() {
@@ -48,9 +47,11 @@ pub async fn build_chain_clients(
 
         let chain_id = provider.get_chainid().await?.as_u64();
 
-        let signer_middleware =
-            SignerMiddleware::new(provider, wallet.clone().with_chain_id(chain_id));
-        let arc_client = Arc::new(signer_middleware);
+        let signer = SignerMiddleware::new(provider, wallet.clone().with_chain_id(chain_id));
+        let address = signer.address();
+        let nonce_manager = NonceManagerMiddleware::new(signer, address);
+
+        let arc_client = Arc::new(nonce_manager);
 
         clients.insert(alias.clone(), arc_client);
     }

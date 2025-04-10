@@ -64,7 +64,9 @@ pub async fn setup_peer_connections(
 
                 // oapp_contract
                 println!("Set peer for {} with value {}", chain_i, eid);
-                oapp_contract.set_peer(eid, peer_addr).send().await?;
+                let call = oapp_contract.set_peer(eid, peer_addr);
+                let _pending_tx = call.send().await?;
+                // pending_tx.confirmations(1).await?; // using nonce manager
             }
         }
     }
@@ -120,7 +122,9 @@ pub async fn send_cross_chain_message(
         .send(eid, message, adapter_params)
         .value(native_fee);
 
-    let tx_hash = tx.send().await?.tx_hash();
+    let receipt = tx.send().await?;
+    let tx_hash = receipt.tx_hash();
+    // receipt.confirmations(1).await?; // using nonce manager
 
     println!(
         "Message sent from {} to {}. Transaction hash: {:?}",
@@ -134,6 +138,7 @@ pub async fn send_cross_chain_message(
     Ok(tx_hash)
 }
 
+// TODO Is possible to parallelize this function but only for a given source chain fixed
 pub async fn send_messages_to_all_chains(
     deployer: &LocalWallet,
     addresses: &HashMap<SupportedChain, H160>,

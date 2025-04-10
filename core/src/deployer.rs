@@ -11,7 +11,9 @@ pub async fn deploy_oapp_contract(
     chain_client: &ChainClient,
 ) -> Result<Address> {
     let endpoint_address = chain.endpoint_address();
-    let delegator_address = chain_client.address();
+
+    let underlying_signer = chain_client.inner(); // returns &SignerMiddleware<Provider<Http>, LocalWallet>
+    let delegator_address = underlying_signer.signer().address();
 
     let deployed = MyOApp::deploy(chain_client.clone(), (endpoint_address, delegator_address))
         .map_err(|e| {
