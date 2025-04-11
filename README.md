@@ -1,66 +1,111 @@
-## Foundry
+# OFT Wizard
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+[![Test Status](https://github.com/bootnode/oft_wizard/actions/workflows/test.yml/badge.svg)](https://github.com/bootnode/oft_wizard/actions/workflows/test.yml)
 
-Foundry consists of:
+## Overview
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+OFT Wizard is a project by [Bootnode](https://bootnode.dev) designed to simplify the development, deployment, and management of Omnichain Apps (OApp) applications using the LayerZero protocol. The project aims to provide more user-friendly tooling without requiring configuration files and plaintext private keys.
 
-## Documentation
+## Key Features
 
-https://book.getfoundry.sh/
+- **Core Library**: Shared logic for deploying, configuring, and interacting with OApps
+- **CLI Tool**: Command-line interface for basic deployment and wallet management
+- **Wallet Management**: Secure wallet handling without plaintext private keys
+- **Cross-Chain Messaging**: Built-in support for sending arbitrary messages between deployed OApps
 
-## Usage
+## Design Philosophy
 
-### Build
+The primary goal of OFT Wizard is to provide developer-friendly tools that abstract away the complexity of:
 
-```shell
-$ forge build
+- RPC configuration and management
+- Wallet instantiation and security
+- Peer configuration
+- Message fee calculation
+- Bytes and options handling for LayerZero protocol
+
+All of these complexities are hidden from the user, allowing for a streamlined development experience.
+
+## Project Structure
+
+- **core**: Core library containing shared logic and abstractions
+- **cli**: Command-line interface for basic operations
+
+## Prerequisites
+
+### Solidity Compiler
+
+This project uses the Solidity compiler via SVM (Solidity Version Manager). Please refer to the [core README](./core/README.md) for detailed installation instructions.
+
+### RPC Endpoints
+
+The project requires RPC endpoints for the supported chains. Currently, these are configured in the Foundry configuration (`foundry.toml`).
+
+**Note**: This approach requires improvement as it currently requires API keys (like Alchemy tokens) to be stored in plaintext. Future versions will address this security concern.
+
+## Getting Started
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/bootnode/oft_wizard.git
+cd oft_wizard
+
+# Build the project
+cargo build --release
 ```
 
-### Test
+### Using the CLI
 
-```shell
-$ forge test
+```bash
+# Compile contracts
+./target/release/cli compile
+
+# Create a new wallet
+./target/release/cli --chain base_sepolia wallet new
+
+# Check wallet balance
+./target/release/cli --chain base_sepolia wallet balance --path /path/to/wallet
+
+# Deploy to multiple chains
+./target/release/cli --chain base_sepolia deploy --path /path/to/wallet --chainlist optimism_sepolia arbitrum_sepolia
 ```
 
-### Format
+## Supported Chains
 
-```shell
-$ forge fmt
-```
+- Base Sepolia
+- Optimism Sepolia
+- Arbitrum Sepolia
+- Gnosis Chiado
 
-### Gas Snapshots
+## Advanced Features
 
-```shell
-$ forge snapshot
-```
+### Message Types
 
-### Anvil
+The example OApp from the LayerZero quickstart demonstrates string message passing, but the framework supports more complex use cases:
 
-```shell
-$ anvil
-```
+- **Unicast**: Send messages to a single destination
+- **Multicast**: Send messages to multiple specified destinations
+- **Broadcast**: Send messages to all peer contracts
 
-### Deploy
+These patterns can be used to implement various cross-chain applications beyond simple mint/burn token operations.
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+## Future Roadmap
 
-### Cast
+- REST API implementation using Axum
+- Support for additional blockchains compatible with LayerZero (Solana, Aptos, etc.)
+- Enhanced contract customization options
+- Improved security for API key management
+- Event listener agents for monitoring cross-chain messages
 
-```shell
-$ cast <subcommand>
-```
+## Contributing
 
-### Help
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Disclaimer
+
+This is an experimental project. Use at your own risk.
