@@ -1,7 +1,5 @@
 # OFT Wizard
 
-[![Test Status](https://github.com/bootnode/oft_wizard/actions/workflows/test.yml/badge.svg)](https://github.com/bootnode/oft_wizard/actions/workflows/test.yml)
-
 ## Overview
 
 OFT Wizard is a project by [Bootnode](https://bootnode.dev) designed to simplify the development, deployment, and management of Omnichain Apps (OApp) applications using the LayerZero protocol. The project aims to provide more user-friendly tooling without requiring configuration files and plaintext private keys.
@@ -101,10 +99,6 @@ These patterns can be used to implement various cross-chain applications beyond 
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Disclaimer
 
