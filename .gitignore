@@ -1,1 +1,7 @@
 /target
+wallets/
+.env
+lib/
+node_modules
+artifacts
+cache

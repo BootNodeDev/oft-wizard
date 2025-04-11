@@ -1,0 +1,14 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+core = { path = "../core" }
+ethers = "2"
+anyhow = "1"
+foundry-config = "0.2"
+dotenvy = "0.15"
+rpassword = "7"

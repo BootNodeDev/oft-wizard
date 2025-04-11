@@ -1,0 +1,17 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@layerzerolabs/lz-evm-protocol-v2": "^3.0.83",
+    "@layerzerolabs/oapp-evm": "^0.3.2",
+    "@openzeppelin/contracts": "^5.2.0"
+  }
+}
