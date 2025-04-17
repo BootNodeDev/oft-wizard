@@ -4,8 +4,8 @@ out = "out"
 libs = ["lib"]
 
 [rpc_endpoints]
-arbitrum_sepolia = "https://arb-sepolia.g.alchemy.com/v2/xKOtf2A3zmDOAX34JC42TkIsuW0kYfmX"
-base_sepolia = "https://base-sepolia.g.alchemy.com/v2/xKOtf2A3zmDOAX34JC42TkIsuW0kYfmX"
-optimism_sepolia = "https://opt-sepolia.g.alchemy.com/v2/xKOtf2A3zmDOAX34JC42TkIsuW0kYfmX"
-gnosis_chiado = "https://gnosis-chiado.g.alchemy.com/v2/xKOtf2A3zmDOAX34JC42TkIsuW0kYfmX"
-linea_sepolia = "https://linea-sepolia.g.alchemy.com/v2/xKOtf2A3zmDOAX34JC42TkIsuW0kYfmX"
+arbitrum_sepolia = "https://arb-sepolia.g.alchemy.com/v2/removed"
+base_sepolia = "https://base-sepolia.g.alchemy.com/v2/removed"
+optimism_sepolia = "https://opt-sepolia.g.alchemy.com/v2/removed"
+gnosis_chiado = "https://gnosis-chiado.g.alchemy.com/v2/removed"
+linea_sepolia = "https://linea-sepolia.g.alchemy.com/v2/removed"

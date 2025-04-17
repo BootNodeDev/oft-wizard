@@ -38,7 +38,7 @@ This project uses the Solidity compiler via SVM (Solidity Version Manager). Plea
 
 The project requires RPC endpoints for the supported chains. Currently, these are configured in the Foundry configuration (`foundry.toml`).
 
-**Note**: This approach requires improvement as it currently requires API keys (like Alchemy tokens) to be stored in plaintext. Future versions will address this security concern.
+**Note**: This approach requires improvement as it currently requires API keys (like Alchemy) to be stored in plaintext. Future versions will address this security concern. The current api key is disabled.
 
 ## Getting Started
 
